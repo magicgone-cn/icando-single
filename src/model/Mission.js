@@ -1,7 +1,9 @@
 import {GuidUtil} from "../utils";
 
 export const NodeType = {
-  root: Symbol.for('rootNode')
+  root: Symbol.for('rootNode'),
+  normal: Symbol.for('normalNode'),
+  leaf: Symbol.for('leafNode'),
 };
 
 /**
@@ -19,6 +21,7 @@ export class Mission{
   completed = false;
   children = null;
   parent = null;
+  type = NodeType.normal;
 
   constructor(title) {
     this.id = GuidUtil.uuid(); // guid
@@ -37,6 +40,22 @@ export class RootMission extends Mission{
 
 }
 
+
+/**
+ * 修改子节点的父节点指针为当前父节点
+ * @param {Mission} parentNode
+ * @returns {Mission}
+ */
+function redirectParentPointer(parentNode){
+  parentNode.children.forEach(node=>{
+    node.parent = parentNode;
+  });
+  return parentNode;
+}
+
+/**
+ * 任务相关工厂方法
+ */
 export class MissionFactory{
   /**
    * 添加任务
@@ -46,19 +65,17 @@ export class MissionFactory{
    * 返回新的父节点，并将原来此父节点下的所有子节点的父节点指针修改为新的父节点
    */
   static append(parentNode,mission){
-    const newParentNode = {...parentNode};
-    if(newParentNode.children){
+    const targetParentNode = {...parentNode};
+    if(targetParentNode.children){
       // 子节点已存在
-      newParentNode.children.append(mission);
+      targetParentNode.children.push(mission);
     }else{
       // 子节点不存在
-     newParentNode.children = [mission];
+      targetParentNode.children = [mission];
     }
     // 重写父节点指针指向新的父节点
-    newParentNode.children.forEach(node=>{
-      node.parent = newParentNode;
-    });
-    return newParentNode;
+    redirectParentPointer(targetParentNode);
+    return targetParentNode;
   }
 
   /**
@@ -67,7 +84,18 @@ export class MissionFactory{
    * @param mission
    */
   static update(parentNode,mission){
+    // 修改目标节点为修改后的节点
+    const targetParentNode = parentNode.children.map(node=>{
+      if(node.id === mission.id){
+        return mission;
+      }else{
+        return node;
+      }
+    });
 
+    // 重写父节点指针指向新的父节点
+    redirectParentPointer(targetParentNode);
+    return targetParentNode;
   }
 
   /**
@@ -76,15 +104,41 @@ export class MissionFactory{
    * @param mission
    */
   static delete(parentNode,mission){
+    const targetParentNode = parentNode.children.filter(node=>{
+      return node.id !== mission.id;
+    });
 
+    // 重写父节点指针指向新的父节点
+    redirectParentPointer(targetParentNode);
+    return targetParentNode;
   }
 
   /**
    * 刷新目标节点
-   * @param parentNode
-   * @param node
+   * @param {Mission} parentNode
+   * @param {Mission} node
    */
   static refreshNode(parentNode,node){
+    let pointer = node;
+    while(true){
+      const tempParentNode = pointer.parent;
+      if(tempParentNode === parentNode){
+        break;
+      }
 
+      if(tempParentNode.type === NodeType.root){
+        throw new Error('无效的父节点');
+      }
+
+      pointer = tempParentNode;
+    }
+
+
+    if(node.parent === parentNode){
+      return MissionFactory.update(node.parent,node);
+    }else{
+      const tempNode = MissionFactory.update(node.parent,node);
+      return Mission.refreshNode(parentNode,tempNode);
+    }
   }
 }

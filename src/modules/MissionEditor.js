@@ -1,11 +1,12 @@
 import React from "react";
 import * as PropTypes from "prop-types";
-import {Mission} from "../model/Mission";
+import {Mission, MissionFactory} from "../model/Mission";
 import {Button, Form, Input} from "antd";
 
 const EditType = {
   insert: Symbol.for('insert'),
-  update: Symbol.for('update')
+  update: Symbol.for('update'),
+  delete: Symbol.for("delete"),
 };
 class MissionEditor extends React.Component{
 
@@ -23,25 +24,21 @@ class MissionEditor extends React.Component{
 
   handleSubmit = (event) =>{
     event.preventDefault();
-    this.props.form.validateFields(((errors, values) => {
+    this.props.form.validateFields((errors, values) => {
+      console.log(errors,values);
       if(!errors){
-        const mission = values;
+        const mission = {...this.mission,...values};
         let targetParentNode;
+        const parentNode = this.props.parentNode;
         switch(this.editType) {
           case EditType.update: {
             // update
-            targetParentNode = this.props.parentNode.children.map(node => {
-              if (node.id === mission.id) {
-                return mission;
-              } else {
-                return node;
-              }
-            });
+            targetParentNode = MissionFactory.update(parentNode, mission);
             break;
           }
           case EditType.insert: {
             // insert
-            targetParentNode = [...this.props.parentNode, mission];
+            targetParentNode = MissionFactory.append(parentNode, mission);
             break;
           }
         }
@@ -49,7 +46,7 @@ class MissionEditor extends React.Component{
         // 返回修改后的parentNode
         this.props.onSave(targetParentNode);
       }
-    }))
+    })
   };
 
   render() {

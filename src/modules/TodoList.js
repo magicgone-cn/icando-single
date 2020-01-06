@@ -2,7 +2,7 @@ import React from 'react';
 import * as PropTypes from 'prop-types';
 import {Row, Col, Typography, List, Button, Modal} from 'antd';
 import connectStorage from "./Storage";
-import {RootMission} from "../model/Mission";
+import {MissionFactory, NodeType, RootMission} from "../model/Mission";
 import MissionEditor from "./MissionEditor";
 
 class TodoList extends React.Component{
@@ -27,11 +27,12 @@ class TodoList extends React.Component{
 
   handleRefreshNode = (node) => {
     const rootNode = this.props.rootMission;
-    // TODO 更新子节点，返回一个新的根节点
-    function refreshNode(parentNode,node){
-      return node;
+    if(node.type === NodeType.root){
+      this.props.onChange(node);
+    }else{
+      this.props.onChange(MissionFactory.refreshNode(rootNode,node));
     }
-    this.props.onChange(refreshNode(rootNode,node));
+
   };
 
   render() {
