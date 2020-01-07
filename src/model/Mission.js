@@ -58,6 +58,21 @@ function redirectParentPointer(parentNode){
  */
 export class MissionFactory{
   /**
+   * 复制
+   * @param mission
+   * @returns {Mission}
+   */
+  static clone(mission){
+    switch(mission.type){
+      case NodeType.root:{
+        return Object.assign(new RootMission(),mission);
+      }
+      default:{
+        return Object.assign(new Mission(),mission);
+      }
+    }
+  }
+  /**
    * 添加任务
    * @param parentNode
    * @param mission
@@ -65,10 +80,11 @@ export class MissionFactory{
    * 返回新的父节点，并将原来此父节点下的所有子节点的父节点指针修改为新的父节点
    */
   static append(parentNode,mission){
-    const targetParentNode = {...parentNode};
+
+    const targetParentNode = MissionFactory.clone(parentNode);
     if(targetParentNode.children){
       // 子节点已存在
-      targetParentNode.children.push(mission);
+      targetParentNode.children = [...targetParentNode.children,mission];
     }else{
       // 子节点不存在
       targetParentNode.children = [mission];
@@ -85,7 +101,8 @@ export class MissionFactory{
    */
   static update(parentNode,mission){
     // 修改目标节点为修改后的节点
-    const targetParentNode = parentNode.children.map(node=>{
+    const targetParentNode = MissionFactory.clone(parentNode);
+    targetParentNode.children = parentNode.children.map(node=>{
       if(node.id === mission.id){
         return mission;
       }else{
@@ -104,7 +121,8 @@ export class MissionFactory{
    * @param mission
    */
   static delete(parentNode,mission){
-    const targetParentNode = parentNode.children.filter(node=>{
+    const targetParentNode = MissionFactory.clone(parentNode);
+    targetParentNode.children = parentNode.children.filter(node=>{
       return node.id !== mission.id;
     });
 
@@ -141,4 +159,89 @@ export class MissionFactory{
       return Mission.refreshNode(parentNode,tempNode);
     }
   }
+
+  /**
+   * 转为json
+   * @param mission
+   * @returns {string}
+   */
+  static convertToJson(mission) {
+    const data = convertMissionToData(mission);
+    return JSON.stringify(data);
+  }
+
+  /**
+   * 从json创建Mission
+   * @param json
+   * @returns {Mission}
+   */
+  static createFromJson(json){
+    const data = JSON.parse(json);
+    const mission = convertDataToMission(data);
+    return mission;
+  }
+}
+
+/**
+ * 将Mission转为纯数据对象
+ * @param mission
+ * @returns {object}
+ */
+function convertMissionToData(mission){
+  // 常规字段赋值
+  const {parent,children,type,...data} = mission;
+
+  // type赋值
+  data.type = Symbol.keyFor(type);
+
+  // children赋值
+  if(children){
+    data.children = children.map(item=>{
+      return convertMissionToData(item);
+    })
+  }else{
+    data.children = null;
+  }
+
+  return data;
+}
+
+/**
+ * 将纯数据对象转为Mission
+ * @param data
+ * @param {Mission} [parent=null] 父节点，默认为空
+ * @returns {Mission}
+ */
+function convertDataToMission(data,parent=null){
+  // 常规赋值
+  const {type,children,...missionData} = data;
+
+  let mission;
+  switch(Symbol.for(type)){
+    case NodeType.root: {
+      mission = new RootMission();
+      break;
+    }
+    default:{
+      mission = new Mission();
+    }
+  }
+  Object.assign(mission,missionData);
+
+  // type赋值
+  mission.type = Symbol.for(type);
+
+  // children赋值
+  if(children){
+    mission.children = children.map(item=>{
+      return convertDataToMission(item,mission);
+    })
+  }else{
+    mission.children = null;
+  }
+
+  // parent赋值
+  mission.parent = parent;
+
+  return mission;
 }

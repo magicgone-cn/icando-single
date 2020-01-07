@@ -11,8 +11,8 @@ const EditType = {
 class MissionEditor extends React.Component{
 
   static propTypes = {
-    parentNode: PropTypes.objectOf(Mission).isRequired,
-    mission: PropTypes.objectOf(Mission),
+    parentNode: PropTypes.instanceOf(Mission).isRequired,
+    mission: PropTypes.instanceOf(Mission),
     onSave: PropTypes.func.isRequired, // onSave(newParentNode)
   };
 
@@ -25,7 +25,6 @@ class MissionEditor extends React.Component{
   handleSubmit = (event) =>{
     event.preventDefault();
     this.props.form.validateFields((errors, values) => {
-      console.log(errors,values);
       if(!errors){
         const mission = {...this.mission,...values};
         let targetParentNode;
@@ -77,6 +76,7 @@ class MissionEditor extends React.Component{
         </Form.Item>
         <Form.Item>
           <Button type="primary" htmlType="submit" block>{this.props.mission?'修改':'新增'}</Button>
+          <Button type="default" block onClick={this.props.onCancel}>取消</Button>
         </Form.Item>
       </Form>
     )

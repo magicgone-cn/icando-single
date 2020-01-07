@@ -1,28 +1,39 @@
 import React from 'react';
 import * as PropTypes from 'prop-types';
 import {Row, Col, Typography, List, Button, Modal} from 'antd';
-import connectStorage from "./Storage";
 import {MissionFactory, NodeType, RootMission} from "../model/Mission";
 import MissionEditor from "./MissionEditor";
 
-class TodoList extends React.Component{
+export default class TodoList extends React.Component{
   static propTypes = {
-    rootMission: PropTypes.objectOf(RootMission).isRequired,
+    rootMission: PropTypes.instanceOf(RootMission).isRequired,
     onChange: PropTypes.func.isRequired,
     onSave: PropTypes.func.isRequired
   };
 
+  state = {
+    showModal: false
+  };
+
   handleAddButton = () => {
-    const modal = Modal.info({
-      content: (
-        <MissionEditor
-          parentNode={this.props.rootMission}
-          onSave={(parentNode)=>{
-            this.handleRefreshNode(parentNode);
-            modal.destroy();
-          }}
-        />)
+    this.handleOpenEditor();
+  };
+
+  handleOpenEditor = () => {
+    this.setState({
+      showModal: true
     });
+  };
+
+  handleCloseEditor = () => {
+    this.setState({
+      showModal: false
+    })
+  };
+
+  handleSaveEditor = (parentNode)=>{
+    this.handleRefreshNode(parentNode);
+    this.handleCloseEditor();
   };
 
   handleRefreshNode = (node) => {
@@ -58,14 +69,23 @@ class TodoList extends React.Component{
             </List>
           </Col>
           <Col span={10}>
-            <Button type="primary" onClick={this.handleAddButton}>add mission</Button>
+            <Button type="primary" block onClick={this.handleAddButton}>add mission</Button>
           </Col>
         </Row>
+        <Row type="flex" justify="center" style={{marginTop: '20px'}}>
+          <Col span={10}>
+            <Button type="primary" block onClick={this.props.onSave}>save</Button>
+          </Col>
+        </Row>
+        <Modal visible={this.state.showModal} footer={null} destroyOnClose onCancel={this.handleCloseEditor}>
+          <MissionEditor
+            parentNode={this.props.rootMission}
+            onSave={this.handleSaveEditor}
+            onCancel={this.handleCloseEditor}
+          />
+        </Modal>
       </>
     )
   }
 }
 
-
-
-export default connectStorage(TodoList);

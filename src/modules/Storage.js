@@ -1,5 +1,5 @@
 import React from 'react';
-import {RootMission} from "../model/Mission";
+import {MissionFactory, RootMission} from "../model/Mission";
 
 export default function connectStorage(WrapperComponent){
   return class Storage extends React.Component{
@@ -8,6 +8,10 @@ export default function connectStorage(WrapperComponent){
       rootMission: new RootMission()
     };
 
+    componentDidMount() {
+      this.handleLoad();
+    }
+
     handleChange = (rootMission) => {
       this.setState({
         rootMission: rootMission
@@ -15,12 +19,14 @@ export default function connectStorage(WrapperComponent){
     };
 
     handleSave = () => {
-      sessionStorage.setItem("rootMission",JSON.stringify(this.state.rootMission));
+      localStorage.setItem("rootMission",MissionFactory.convertToJson(this.state.rootMission));
+      return Promise.resolve();
     };
 
     handleLoad = () => {
-      const rootMission = sessionStorage.getItem("rootMission");
-      if(rootMission != null){
+      const rootMissionStr = localStorage.getItem("rootMission");
+      if(rootMissionStr){
+        const rootMission = MissionFactory.createFromJson(rootMissionStr);
         this.setState({
           rootMission
         })
@@ -29,7 +35,7 @@ export default function connectStorage(WrapperComponent){
 
     render() {
       const {rootMission} = this.state;
-      return <WrapperComponent {...this.props} rootMission={rootMission} onChange={this.handleChange}/>
+      return <WrapperComponent {...this.props} rootMission={rootMission} onChange={this.handleChange} onSave={this.handleSave}/>
     }
   }
 }
