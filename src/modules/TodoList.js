@@ -7,8 +7,10 @@ import MissionEditor from "./MissionEditor";
 export default class TodoList extends React.Component{
   static propTypes = {
     rootMission: PropTypes.instanceOf(RootMission).isRequired,
-    onChange: PropTypes.func.isRequired,
-    onSave: PropTypes.func.isRequired
+    onChange: PropTypes.func.isRequired, // 数据变化
+    onSave: PropTypes.func.isRequired, // 保存
+    onImport: PropTypes.func.isRequired, // 导入
+    onExport: PropTypes.func.isRequired, // 导出
   };
 
   state = {
@@ -55,7 +57,7 @@ export default class TodoList extends React.Component{
             <Typography.Title>I CAN DO</Typography.Title>
           </Col>
         </Row>
-        <Row type="flex" justify="center">
+        <Row type="flex" justify="center" style={{minHeight: '50vh'}}>
           <Col span={18}>
             <List dataSource={missionList} rowKey={(mission)=>mission.id} renderItem={(mission)=>{
               return (
@@ -72,9 +74,15 @@ export default class TodoList extends React.Component{
             <Button type="primary" block onClick={this.handleAddButton}>add mission</Button>
           </Col>
         </Row>
-        <Row type="flex" justify="center" style={{marginTop: '20px'}}>
-          <Col span={10}>
-            <Button type="primary" block onClick={this.props.onSave}>save</Button>
+        <Row type="flex" justify="center">
+          <Col span={4}>
+            <Button type="default" block onClick={this.props.onSave}>save</Button>
+          </Col>
+          <Col span={4}>
+            <Button type="default" block onClick={this.props.onExport}>export</Button>
+          </Col>
+          <Col span={4}>
+            <Button type="default" block onClick={this.props.onImport}>import</Button>
           </Col>
         </Row>
         <Modal visible={this.state.showModal} footer={null} destroyOnClose onCancel={this.handleCloseEditor}>
