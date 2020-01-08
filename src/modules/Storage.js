@@ -9,6 +9,7 @@ export default function connectStorage(WrapperComponent){
     };
 
     componentDidMount() {
+      this.handleImportInit();
       this.handleLoad();
     }
 
@@ -47,7 +48,7 @@ export default function connectStorage(WrapperComponent){
       });
     };
 
-    handleImport = () => {
+    handleImportInit = () => {
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = '.json';
@@ -63,7 +64,12 @@ export default function connectStorage(WrapperComponent){
         };
         fileReader.readAsText(file);
       });
-      input.click();
+
+      this.importInput = input;
+    };
+
+    handleImport = () => {
+      this.importInput.click();
     };
 
     render() {
