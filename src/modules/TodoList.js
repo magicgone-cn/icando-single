@@ -1,6 +1,6 @@
 import React from 'react';
 import * as PropTypes from 'prop-types';
-import {Row, Col, Typography, List, Button, Modal, Tree, Checkbox} from 'antd';
+import {Row, Col, Typography, List, Button, Modal, Tree, Checkbox, Switch} from 'antd';
 import {MissionFactory, NodeType, RootMission} from "../model/Mission";
 import MissionEditor from "./MissionEditor";
 
@@ -16,7 +16,7 @@ export default class TodoList extends React.Component{
   };
 
   state = {
-    showModal: false
+    showCompleted: false
   };
 
   openEditor = (mission) => {
@@ -119,13 +119,18 @@ export default class TodoList extends React.Component{
     });
   };
 
+  handleShowCompletedChange = (showCompleted) => {
+    this.setState({showCompleted});
+  };
+
   render() {
     const missionList = this.props.rootMission.children;
     return (
       <>
         <Row type="flex" justify="center">
-          <Col>
+          <Col style={{textAlign:'center'}}>
             <Typography.Title>I CAN DO</Typography.Title>
+            <Switch checkedChildren="显示已完成" unCheckedChildren="隐藏已完成" checked={this.state.showCompleted} onChange={this.handleShowCompletedChange}/>
           </Col>
         </Row>
         <Row type="flex" justify="center" style={{minHeight: '50vh'}}>
