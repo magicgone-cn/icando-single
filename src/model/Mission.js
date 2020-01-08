@@ -1,4 +1,4 @@
-import {GuidUtil} from "../utils";
+import {GuidUtil, Util} from "../utils";
 
 export const NodeType = {
   root: Symbol.for('rootNode'),
@@ -110,6 +110,13 @@ export class MissionFactory{
       }
     });
 
+    // 如果子节点还有子节点，则更新子节点的父节点指针指向新生成的子节点
+    if(!Util.isEmpty(mission.children)){
+      mission.children.forEach(item=>{
+        item.parent = mission;
+      })
+    }
+
     // 重写父节点指针指向新的父节点
     redirectParentPointer(targetParentNode);
     return targetParentNode;
@@ -156,7 +163,7 @@ export class MissionFactory{
       return MissionFactory.update(node.parent,node);
     }else{
       const tempNode = MissionFactory.update(node.parent,node);
-      return Mission.refreshNode(parentNode,tempNode);
+      return MissionFactory.refreshNode(parentNode,tempNode);
     }
   }
 

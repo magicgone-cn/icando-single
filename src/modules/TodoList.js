@@ -1,8 +1,10 @@
 import React from 'react';
 import * as PropTypes from 'prop-types';
-import {Row, Col, Typography, List, Button, Modal} from 'antd';
+import {Row, Col, Typography, List, Button, Modal, Tree, Checkbox} from 'antd';
 import {MissionFactory, NodeType, RootMission} from "../model/Mission";
 import MissionEditor from "./MissionEditor";
+
+import './TodoList.css';
 
 export default class TodoList extends React.Component{
   static propTypes = {
@@ -17,28 +19,31 @@ export default class TodoList extends React.Component{
     showModal: false
   };
 
-  handleAddButton = () => {
-    this.handleOpenEditor();
-  };
-
-  handleOpenEditor = () => {
-    this.setState({
-      showModal: true
+  openEditor = (mission) => {
+    const promise = new Promise((resolve)=>{
+      const modal = Modal.info({
+        icon: null,
+        okButtonProps: {style:{display: 'none'}},
+        content: (
+          <MissionEditor
+            mission={mission}
+            onChange={(mission)=>{resolve(mission);modal.destroy();}}
+            onCancel={()=>{modal.destroy()}}
+          />
+        )
+      });
     });
+    const editor = {
+      onChange: (callback) => {
+        promise.then((mission)=>{
+          callback(mission);
+        })
+      }
+    };
+    return editor;
   };
 
-  handleCloseEditor = () => {
-    this.setState({
-      showModal: false
-    })
-  };
-
-  handleSaveEditor = (parentNode)=>{
-    this.handleRefreshNode(parentNode);
-    this.handleCloseEditor();
-  };
-
-  handleRefreshNode = (node) => {
+  refreshNode = (node) => {
     const rootNode = this.props.rootMission;
     if(node.type === NodeType.root){
       this.props.onChange(node);
@@ -46,6 +51,72 @@ export default class TodoList extends React.Component{
       this.props.onChange(MissionFactory.refreshNode(rootNode,node));
     }
 
+  };
+
+  renderTreeNodes = (nodes) => {
+    if(nodes){
+      return nodes.map( mission => {
+        return (
+          <Tree.TreeNode title={mission.title} key={mission.key}>
+            {mission.children && this.renderTreeNodes(mission.children)}
+          </Tree.TreeNode>
+        )
+      });
+    }
+  };
+
+  handleMissionStatusChange = (event) => {
+    const checked = event.target.checked;
+    const mission = event.target['data-mission'];
+    this.refreshNode(Object.assign(MissionFactory.clone(mission),{completed:checked}));
+  };
+
+  /**
+   *
+   * @param {Mission} mission
+   * @returns {*}
+   */
+  renderMission = (mission) => {
+    // TODO button传递mission存在效率问题，待优化
+    return (
+      <>
+        <List.Item className="mission" actions={[<Button className="btn-hidden" onClick={()=>{this.handleEdit(mission)}}>编辑</Button>,<Button className="btn-hidden" onClick={()=>{this.handleDelete(mission)}}>删除</Button>,<Button className="btn-hidden" onClick={()=>{this.handleAdd(mission)}}>添加</Button>]}>
+          <Checkbox checked={mission.completed} onChange={this.handleMissionStatusChange} data-mission={mission} style={{marginRight: '20px'}}/>
+          <List.Item.Meta title={mission.title} description={mission.description} />
+        </List.Item>
+        {mission.children && Object.keys(mission.children).length > 0 && <List style={{marginLeft: '20px'}} dataSource={mission.children} rowKey={(mission)=>mission.id} renderItem={(mission)=>{
+          return this.renderMission(mission);
+        }} />}
+      </>
+    )
+  };
+
+  /**
+   * 编辑Mission
+   * @param mission
+   */
+  handleEdit = (mission) => {
+    this.openEditor(mission).onChange((mission)=>{
+      this.refreshNode(mission);
+    })
+  };
+
+  /**
+   * 删除mission
+   * @param mission
+   */
+  handleDelete = (mission) => {
+    this.refreshNode(MissionFactory.delete(mission.parent,mission));
+  };
+
+  /**
+   * 添加子mission
+   * @param {Mission} parentMission
+   */
+  handleAdd = (parentMission) => {
+    this.openEditor().onChange((mission)=>{
+      this.refreshNode(MissionFactory.append(parentMission,mission));
+    });
   };
 
   render() {
@@ -60,18 +131,11 @@ export default class TodoList extends React.Component{
         <Row type="flex" justify="center" style={{minHeight: '50vh'}}>
           <Col span={18}>
             <List dataSource={missionList} rowKey={(mission)=>mission.id} renderItem={(mission)=>{
-              return (
-                <li key={mission.id}>
-                  <div>
-                    {mission.title}
-                  </div>
-                </li>
-              )
-            }}>
-            </List>
+              return this.renderMission(mission);
+            }} />
           </Col>
           <Col span={10}>
-            <Button type="primary" block onClick={this.handleAddButton}>add mission</Button>
+            <Button type="primary" block onClick={()=>{this.handleAdd(this.props.rootMission)}}>add mission</Button>
           </Col>
         </Row>
         <Row type="flex" justify="center">
@@ -85,13 +149,6 @@ export default class TodoList extends React.Component{
             <Button type="default" block onClick={this.props.onImport}>import</Button>
           </Col>
         </Row>
-        <Modal visible={this.state.showModal} footer={null} destroyOnClose onCancel={this.handleCloseEditor}>
-          <MissionEditor
-            parentNode={this.props.rootMission}
-            onSave={this.handleSaveEditor}
-            onCancel={this.handleCloseEditor}
-          />
-        </Modal>
       </>
     )
   }

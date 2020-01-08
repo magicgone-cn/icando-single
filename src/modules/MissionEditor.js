@@ -1,6 +1,6 @@
 import React from "react";
 import * as PropTypes from "prop-types";
-import {Mission, MissionFactory} from "../model/Mission";
+import {Mission} from "../model/Mission";
 import {Button, Form, Input} from "antd";
 
 const EditType = {
@@ -11,9 +11,9 @@ const EditType = {
 class MissionEditor extends React.Component{
 
   static propTypes = {
-    parentNode: PropTypes.instanceOf(Mission).isRequired,
     mission: PropTypes.instanceOf(Mission),
-    onSave: PropTypes.func.isRequired, // onSave(newParentNode)
+    onChange: PropTypes.func.isRequired,
+    onCancel: PropTypes.func.isRequired,
   };
 
   constructor(props) {
@@ -27,23 +27,9 @@ class MissionEditor extends React.Component{
     this.props.form.validateFields((errors, values) => {
       if(!errors){
         const mission = {...this.mission,...values};
-        let targetParentNode;
-        const parentNode = this.props.parentNode;
-        switch(this.editType) {
-          case EditType.update: {
-            // update
-            targetParentNode = MissionFactory.update(parentNode, mission);
-            break;
-          }
-          case EditType.insert: {
-            // insert
-            targetParentNode = MissionFactory.append(parentNode, mission);
-            break;
-          }
-        }
 
-        // 返回修改后的parentNode
-        this.props.onSave(targetParentNode);
+        // 返回修改后的mission
+        this.props.onChange(mission);
       }
     })
   };
@@ -68,20 +54,36 @@ class MissionEditor extends React.Component{
         </Form.Item>
         <Form.Item label="任务详情">
           {getFieldDecorator('description',{
-            initialValue: mission.description,
-            rules: [
-              {required: true,message:'请输入任务名称'}
-            ]
+            initialValue: mission.description
           })(<Input />)}
         </Form.Item>
         <Form.Item>
-          <Button type="primary" htmlType="submit" block>{this.props.mission?'修改':'新增'}</Button>
+          <Button type="primary" htmlType="submit" block>{formatButtonText(this.editType)}</Button>
           <Button type="default" block onClick={this.props.onCancel}>取消</Button>
         </Form.Item>
       </Form>
     )
   }
 }
+
+/**
+ * 格式化按钮文字
+ * @param editType
+ */
+function formatButtonText(editType){
+  switch(editType){
+    case EditType.update:{
+      return '修改';
+    }
+    case EditType.insert:{
+      return '新增';
+    }
+    default: {
+      return '保存';
+    }
+  }
+}
+
 const WrappedMissionEditor = Form.create()(MissionEditor);
 WrappedMissionEditor.propTypes = MissionEditor.propTypes;
 
