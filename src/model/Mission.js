@@ -12,13 +12,15 @@ export const NodeType = {
  * @param {string} title 任务名称
  * @param {string} description 任务详细描述
  * @param {bool} completed 任务是否完成
- * @param {array<Mission>} children 子任务
+ * @param {bool} expanded 任务是否展开
+ * @param {Mission[]} children 子任务
  */
 export class Mission{
   id = '';
   title = '';
   description = '';
   completed = false;
+  expanded = false;
   children = null;
   parent = null;
   type = NodeType.normal;
@@ -186,6 +188,40 @@ export class MissionFactory{
     const data = JSON.parse(json);
     const mission = convertDataToMission(data);
     return mission;
+  }
+
+  /**
+   * 解析附加信息
+   * @param {Mission} mission
+   * @returns
+   * {
+   *   completedKeys: [], // 完成的任务ID
+   *   expandedKeys: [], // 展开的任务ID
+   * }
+   */
+  static parseExtraInfo(mission) {
+    const extraInfo = {
+      completedKeys: new Set(),
+      expandedKeys: new Set(),
+    };
+    if(mission.completed){
+      extraInfo.completedKeys.add(mission.id);
+    }
+    if(mission.expanded){
+      extraInfo.expandedKeys.add(mission.id);
+    }
+    if(!Util.isEmpty(mission.children)){
+      mission.children.forEach(mission=>{
+        const {completedKeys,expandedKeys} = MissionFactory.parseExtraInfo(mission);
+        [...completedKeys].forEach(key=>{
+          extraInfo.completedKeys.add(key);
+        });
+        [...expandedKeys].forEach(key=>{
+          extraInfo.expandedKeys.add(key);
+        });
+      })
+    }
+    return extraInfo;
   }
 }
 

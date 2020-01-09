@@ -5,6 +5,7 @@ import {MissionFactory, NodeType, RootMission} from "../model/Mission";
 import MissionEditor from "./MissionEditor";
 
 import './TodoList.css';
+import {Util} from "../utils";
 
 export default class TodoList extends React.Component{
   static propTypes = {
@@ -53,26 +54,43 @@ export default class TodoList extends React.Component{
 
   };
 
-  renderTreeNodes = (nodes) => {
-    if(nodes){
-      return nodes.map( mission => {
-        return (
-          <Tree.TreeNode title={mission.title} key={mission.key}>
-            {mission.children && this.renderTreeNodes(mission.children)}
-          </Tree.TreeNode>
-        )
-      });
-    }
-  };
-
-  handleMissionStatusChange = (event) => {
+  handleCompletedChange = (event) => {
     const checked = event.target.checked;
     const mission = event.target['data-mission'];
     this.refreshNode(Object.assign(MissionFactory.clone(mission),{completed:checked}));
   };
 
   /**
-   *
+   * 渲染树节点
+   * @param {Mission[]} nodes
+   * @returns {*}
+   */
+  renderTreeNodes = (nodes) => {
+    const {showCompleted} = this.state;
+    if(nodes){
+      return nodes.map( mission => {
+        return (
+          <Tree.TreeNode
+            className="treeNode"
+            style={!showCompleted&&mission.completed?{display:'none'}:{}}
+            key={mission.id}
+            title={(
+              <ul>
+                <List.Item className="mission" actions={[<Button className="btn-hidden" onClick={()=>{this.handleEdit(mission)}}>编辑</Button>,<Button className="btn-hidden" onClick={()=>{this.handleDelete(mission)}}>删除</Button>,<Button className="btn-hidden" onClick={()=>{this.handleAdd(mission)}}>添加</Button>]}>
+                  <List.Item.Meta title={mission.title} description={mission.description} />
+                </List.Item>
+              </ul>
+            )}
+          >
+            {!Util.isEmpty(mission.children) && this.renderTreeNodes(mission.children)}
+          </Tree.TreeNode>
+        )
+      });
+    }
+  };
+
+  /**
+   * 渲染列表节点
    * @param {Mission} mission
    * @returns {*}
    */
@@ -82,7 +100,7 @@ export default class TodoList extends React.Component{
     return (
       <>
         <List.Item hidden={!showCompleted&&mission.completed} className="mission" actions={[<Button className="btn-hidden" onClick={()=>{this.handleEdit(mission)}}>编辑</Button>,<Button className="btn-hidden" onClick={()=>{this.handleDelete(mission)}}>删除</Button>,<Button className="btn-hidden" onClick={()=>{this.handleAdd(mission)}}>添加</Button>]}>
-          <Checkbox checked={mission.completed} onChange={this.handleMissionStatusChange} data-mission={mission} style={{marginRight: '20px'}}/>
+          <Checkbox checked={mission.completed} onChange={this.handleCompletedChange} data-mission={mission} style={{marginRight: '20px'}}/>
           <List.Item.Meta title={mission.title} description={mission.description} />
         </List.Item>
         {mission.children && Object.keys(mission.children).length > 0 && <List style={{marginLeft: '20px'}} dataSource={mission.children} rowKey={(mission)=>mission.id} renderItem={(mission)=>{
@@ -126,6 +144,8 @@ export default class TodoList extends React.Component{
 
   render() {
     const missionList = this.props.rootMission.children;
+    const {completedKeys,expandedKeys} = MissionFactory.parseExtraInfo(this.props.rootMission);
+    console.log(completedKeys);
     return (
       <>
         <Row type="flex" justify="center">
@@ -134,11 +154,16 @@ export default class TodoList extends React.Component{
             <Switch checkedChildren="显示已完成" unCheckedChildren="隐藏已完成" checked={this.state.showCompleted} onChange={this.handleShowCompletedChange}/>
           </Col>
         </Row>
-        <Row type="flex" justify="center" style={{minHeight: '50vh'}}>
-          <Col span={18}>
+        <Row type="flex" justify="space-around" style={{minHeight: '50vh'}}>
+          <Col span={10}>
             <List dataSource={missionList} rowKey={(mission)=>mission.id} renderItem={(mission)=>{
               return this.renderMission(mission);
             }} />
+          </Col>
+          <Col span={10}>
+            <Tree blockNode checkStrictly checkable checkedKeys={[...completedKeys]}>
+              {this.renderTreeNodes(missionList)}
+            </Tree>
           </Col>
           <Col span={10}>
             <Button type="primary" block onClick={()=>{this.handleAdd(this.props.rootMission)}}>add mission</Button>

@@ -4,9 +4,17 @@ import {MissionFactory, RootMission} from "../model/Mission";
 export default function connectStorage(WrapperComponent){
   return class Storage extends React.Component{
 
-    state = {
-      rootMission: new RootMission()
-    };
+    constructor(props){
+      super(props);
+      const rootMission = new RootMission();
+      this.state = {
+        rootMission: rootMission,
+        // TODO 增加missionMap，handleChange改为处理单个Mission，业务逻辑移到存储来处理
+        missionMap: {
+          [rootMission.id]: rootMission
+        }
+      };
+    }
 
     componentDidMount() {
       this.handleImportInit();
@@ -15,7 +23,7 @@ export default function connectStorage(WrapperComponent){
 
     handleChange = (rootMission) => {
       this.setState({
-        rootMission: rootMission
+        rootMission
       })
     };
 
@@ -85,3 +93,9 @@ export default function connectStorage(WrapperComponent){
     }
   }
 }
+
+export const ChangeType = {
+  insert: Symbol.for('insert'),
+  update: Symbol.for('update'),
+  delete: Symbol.for('delete'),
+};

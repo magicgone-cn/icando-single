@@ -1,5 +1,4 @@
 import React from 'react';
-import "antd/dist/antd.css";
 import './App.css';
 import TodoList from "./modules/TodoList";
 import connectStorage from "./modules/Storage";

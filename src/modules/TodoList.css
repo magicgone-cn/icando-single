@@ -5,3 +5,7 @@
 .mission:hover .btn-hidden{
     display: flex;
 }
+
+.ant-tree li.treeNode .ant-tree-node-content-wrapper{
+    height: auto;
+}
