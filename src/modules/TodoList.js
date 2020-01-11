@@ -75,11 +75,11 @@ export default class TodoList extends React.Component{
             style={!showCompleted&&mission.completed?{display:'none'}:{}}
             key={mission.id}
             title={(
-              <ul>
+              <ol>
                 <List.Item className="mission" actions={[<Button className="btn-hidden" onClick={()=>{this.handleEdit(mission)}}>编辑</Button>,<Button className="btn-hidden" onClick={()=>{this.handleDelete(mission)}}>删除</Button>,<Button className="btn-hidden" onClick={()=>{this.handleAdd(mission)}}>添加</Button>]}>
                   <List.Item.Meta title={mission.title} description={mission.description} />
                 </List.Item>
-              </ul>
+              </ol>
             )}
           >
             {!Util.isEmpty(mission.children) && this.renderTreeNodes(mission.children)}
