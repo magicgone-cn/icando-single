@@ -54,9 +54,9 @@ export default class TodoList extends React.Component{
 
   };
 
-  handleCompletedChange = (event) => {
-    const checked = event.target.checked;
-    const mission = event.target['data-mission'];
+  handleCompletedChange = (checkedKeys,event) => {
+    const checked = event.checked;
+    const mission = event.node.props['data-mission'];
     this.refreshNode(Object.assign(MissionFactory.clone(mission),{completed:checked}));
   };
 
@@ -74,6 +74,7 @@ export default class TodoList extends React.Component{
             className="treeNode"
             style={!showCompleted&&mission.completed?{display:'none'}:{}}
             key={mission.id}
+            data-mission={mission}
             title={(
               <ol>
                 <List.Item className="mission" actions={[<Button className="btn-hidden" onClick={()=>{this.handleEdit(mission)}}>编辑</Button>,<Button className="btn-hidden" onClick={()=>{this.handleDelete(mission)}}>删除</Button>,<Button className="btn-hidden" onClick={()=>{this.handleAdd(mission)}}>添加</Button>]}>
@@ -155,13 +156,8 @@ export default class TodoList extends React.Component{
           </Col>
         </Row>
         <Row type="flex" justify="space-around" style={{minHeight: '50vh'}}>
-          <Col span={10}>
-            <List dataSource={missionList} rowKey={(mission)=>mission.id} renderItem={(mission)=>{
-              return this.renderMission(mission);
-            }} />
-          </Col>
-          <Col span={10}>
-            <Tree blockNode checkStrictly checkable checkedKeys={[...completedKeys]}>
+          <Col span={16}>
+            <Tree blockNode checkStrictly checkable checkedKeys={[...completedKeys]} onCheck={this.handleCompletedChange}>
               {this.renderTreeNodes(missionList)}
             </Tree>
           </Col>
