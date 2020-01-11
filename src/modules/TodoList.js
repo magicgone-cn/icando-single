@@ -146,7 +146,6 @@ export default class TodoList extends React.Component{
   render() {
     const missionList = this.props.rootMission.children;
     const {completedKeys,expandedKeys} = MissionFactory.parseExtraInfo(this.props.rootMission);
-    console.log(completedKeys);
     return (
       <>
         <Row type="flex" justify="center">
