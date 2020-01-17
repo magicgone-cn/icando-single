@@ -24,7 +24,7 @@ export default function connectStorage(WrapperComponent){
     handleChange = (rootMission) => {
       this.setState({
         rootMission
-      })
+      },this.handleSave);
     };
 
     handleSave = () => {

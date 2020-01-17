@@ -39,7 +39,7 @@ class MissionEditor extends React.Component{
     let {mission} = this;
     return (
       <Form onSubmit={this.handleSubmit}>
-        <Form.Item label={"任务ID"}>
+        <Form.Item label={"任务ID"} hidden>
           {getFieldDecorator('id',{
             initialValue: mission.id,
           })(<Input readOnly/>)}
