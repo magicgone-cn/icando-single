@@ -156,8 +156,6 @@ export default class TodoList extends React.Component{
     let dropTargetMission = dropTargetNode.props['data-mission'];
     const dragMission = dragNode.props['data-mission'];
 
-    console.log(dropTargetMission,dropTargetPosition,dragMission,relativePosition);
-
     let rootMission = this.props.rootMission;
 
     // step1 从原节点处删除拖拽节点
