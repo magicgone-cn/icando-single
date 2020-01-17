@@ -81,3 +81,14 @@ export class Util {
     return obj === null || obj === undefined || Object.keys(obj).length === 0;
   }
 }
+
+export class ArrayUtil {
+  /**
+   * 获取数组的最后一个元素
+   * @param array
+   * @returns {*}
+   */
+  static getLast(array){
+    return array[array.length - 1];
+  }
+}

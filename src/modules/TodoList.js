@@ -5,7 +5,7 @@ import {MissionFactory, NodeType, RootMission} from "../model/Mission";
 import MissionEditor from "./MissionEditor";
 
 import './TodoList.css';
-import {Util} from "../utils";
+import {ArrayUtil, Util} from "../utils";
 
 export default class TodoList extends React.Component{
   static propTypes = {
@@ -143,6 +143,54 @@ export default class TodoList extends React.Component{
     this.setState({showCompleted});
   };
 
+  handleDrop = ({node,dragNode,dropPosition}) => {
+    // 命名规则 drop为拖拽终点，drag为拖拽目标
+
+    // 拖拽终点目标节点
+    const dropTargetNode = node;
+    // 拖拽终点目标节点的位置
+    const dropTargetPosition = parseInt(ArrayUtil.getLast(node.props.pos.split('-')));
+    // 拖拽终点相对目标节点的位置 -1 节点前 0 节点中 1 节点后
+    const relativePosition = dropPosition - dropTargetPosition;
+    // 拖拽终点任务节点
+    let dropTargetMission = dropTargetNode.props['data-mission'];
+    const dragMission = dragNode.props['data-mission'];
+
+    console.log(dropTargetMission,dropTargetPosition,dragMission,relativePosition);
+
+    let rootMission = this.props.rootMission;
+
+    // step1 从原节点处删除拖拽节点
+    const newDeletedNode = MissionFactory.delete(dragMission.parent,dragMission);
+    rootMission = MissionFactory.refreshNode(rootMission,newDeletedNode);
+
+    // 删除拖拽节点后，会生成新的节点链，如果目标节点在新生成的节点链上，则后续插入操作需要在新的节点链上操作
+    let pointer = newDeletedNode;
+    while(true){
+      if(pointer.id === dropTargetMission.id){
+        dropTargetMission = pointer;
+        break;
+      }
+
+      if(pointer.type === NodeType.root){
+        break;
+      }
+
+      pointer = pointer.parent;
+    }
+
+    // step2 将拖拽节点复制到终点处
+    if(relativePosition === 0){
+      rootMission = MissionFactory.refreshNode(rootMission,MissionFactory.append(dropTargetMission,dragMission));
+    }else{
+      const dropTargetIndex = dropTargetMission.parent.children.indexOf(dropTargetMission);
+      const dropIndex = relativePosition===-1?dropTargetIndex:dropTargetIndex+1;
+      rootMission = MissionFactory.refreshNode(rootMission,MissionFactory.insert(dropTargetMission.parent,dragMission,dropIndex));
+    }
+    this.refreshNode(rootMission);
+
+  };
+
   render() {
     const missionList = this.props.rootMission.children;
     const {completedKeys,expandedKeys} = MissionFactory.parseExtraInfo(this.props.rootMission);
@@ -156,7 +204,15 @@ export default class TodoList extends React.Component{
         </Row>
         <Row type="flex" justify="space-around" style={{minHeight: '50vh'}}>
           <Col span={16}>
-            <Tree blockNode checkStrictly checkable checkedKeys={[...completedKeys]} onCheck={this.handleCompletedChange}>
+            <Tree
+              blockNode
+              checkStrictly
+              checkable
+              checkedKeys={[...completedKeys]}
+              onCheck={this.handleCompletedChange}
+              draggable
+              onDrop={this.handleDrop}
+            >
               {this.renderTreeNodes(missionList)}
             </Tree>
           </Col>

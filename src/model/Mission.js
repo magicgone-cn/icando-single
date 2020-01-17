@@ -141,11 +141,34 @@ export class MissionFactory{
   }
 
   /**
+   * 插入任务
+   * @param parentNode
+   * @param mission
+   * @param index
+   */
+  static insert(parentNode,mission,index){
+    const targetParentNode = MissionFactory.clone(parentNode);
+    if(targetParentNode.children){
+      // 子节点已存在
+      targetParentNode.children = [...targetParentNode.children.slice(0,index),mission,...targetParentNode.children.slice(index)];
+    }else{
+      // 子节点不存在
+      targetParentNode.children = [mission];
+    }
+    // 重写父节点指针指向新的父节点
+    redirectParentPointer(targetParentNode);
+    return targetParentNode;
+  }
+
+  /**
    * 刷新目标节点
    * @param {Mission} parentNode
    * @param {Mission} node
    */
   static refreshNode(parentNode,node){
+    if(node.id === parentNode.id){
+      return node;
+    }
     let pointer = node;
     while(true){
       const tempParentNode = pointer.parent;
